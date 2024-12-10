@@ -1,0 +1,32 @@
+{
+  "actionStatus": "SUCCESS",
+  "operations": [
+    {
+      "op": "replace",
+      "path": "/user/claims/1/value",
+      "value": "Bob@newdomain.com"
+    },
+    {
+      "op": "replace",
+      "path": "/user/claims/2/value",
+      "value": "Bob@newdomain.com"
+    },
+    {
+      "op": "add",
+      "path": "/user/claims/-",
+      "value": {
+        "uri": "http://wso2.org/claims/givenname",
+        "value": "BobUpdated"
+      }
+    },
+    {
+      "op": "remove",
+      "path": "/user/claims/0"
+    },
+    {
+      "op": "replace",
+      "path": "/user/roles/0",
+      "value": "developer"
+    }
+  ]
+}

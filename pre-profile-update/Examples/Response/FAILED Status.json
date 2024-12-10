@@ -1,0 +1,5 @@
+{
+  "actionStatus": "FAILED",
+  "failureReason": "invalid_input",
+  "failureDescription": "User attributes are invalidated."
+}

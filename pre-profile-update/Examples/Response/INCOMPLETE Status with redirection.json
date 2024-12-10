@@ -1,0 +1,11 @@
+{
+  "actionStatus": "INCOMPLETE",
+  "incompleteReason": "redirect_user",
+  "incompleteDescription": "Visit this link to continue.",
+  "operations": [
+    {
+      "op": "redirect",
+      "url": "https://externalservice/validatation/userinput"
+    }
+  ]
+}

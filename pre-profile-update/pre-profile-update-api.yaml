@@ -1,0 +1,635 @@
+openapi: 3.0.1
+info:
+  title: Extension Com
+  version: 0.0.0
+servers:
+- url: "http://{server}:{port}/extension.com"
+  variables:
+    server:
+      default: localhost
+    port:
+      default: "8080"
+# Security Schemas are added manually; not generated automatically.
+security:
+- BasicAuth: []
+- OAuth2: []
+paths:
+  /:
+    post:
+      operationId: post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestBody'
+            examples:
+              Default:
+                value:
+                  actionType: PRE_UPDATE_PROFILE
+                  allowedOperations:
+                  - op: redirect
+                  - op: add
+                    paths:
+                    - /user/claims/
+                    - /user/roles/
+                    - /user/groups/
+                  - op: replace
+                    paths:
+                    - /user/claims/value
+                    - /user/roles/
+                    - /user/groups/
+                  - op: remove
+                    paths:
+                    - /user/claims/
+                    - /user/roles/
+                    - /user/groups/
+                  event:
+                    initiatorType: user
+                    action: update
+                    request:
+                      claims:
+                      - uri: http://wso2.org/claims/emailaddress
+                        value: bob@newdomain.com
+                      additionalHeaders:
+                      - name: Host
+                        values:
+                        - example.com
+                      additionalParams:
+                      - name: device
+                        values:
+                        - 003ef4a768182ba1ece32cb
+                    tenant:
+                      id: "2"
+                      name: bar.com
+                    user:
+                      id: e204849c-4ec2-41f1-8ff7-ec1ebff02821
+                      claims:
+                      - uri: http://wso2.org/claims/additionalname
+                        value: BobN
+                      - uri: http://wso2.org/claims/emailaddress
+                        value: bob@aol.com
+                        updatingvalue: bob@newdomain.com
+                      - uri: http://wso2.org/claims/verifiedemailaddress
+                        value: bob@aol.com
+                      groups:
+                      - employee
+                      roles:
+                      - useradmin
+                    organization:
+                      id: 5c7930f2-c97d-4b38-89a6-7be5fb138a35
+                      name: foo.com
+                    userStore:
+                      id: UFJJTUFSWQ==
+                      name: PRIMARY
+                  flowId: zaTozbdQps
+                  requestId: Ec1wMjmiG8
+        required: true
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseType'
+              examples:
+                INCOMPLETE Status with redirection:
+                  value:
+                    incompleteDescription: Visit this link to continue.
+                    operations:
+                    - op: redirect
+                      url: https://externalservice/validatation/userinput
+                    actionStatus: INCOMPLETE
+                    incompleteReason: redirect_user
+                SUCCESS Status for pre update profile action:
+                  value:
+                    actionStatus: SUCCESS
+                FAILED Status for pre update profile action with context:
+                  value:
+                    context:
+                      updatingClaimResult:
+                      - uri: http://wso2.org/claims/emailaddress
+                        status: FAILED
+                        message: Email is not in use
+                      - uri: http://wso2.org/claims/mobilenumber
+                        status: SUCCESS
+                        message: Valid mobile number
+                    actionStatus: FAILED
+                    failureReason: invalid_input
+                    failureDescription: User attributes are invalidated.
+                FAILED Status:
+                  value:
+                    actionStatus: FAILED
+                    failureReason: invalid_input
+                    failureDescription: User attributes are invalidated.
+                SUCCESS Status for pre update profile action with operations:
+                  value:
+                    actionStatus: SUCCESS
+                    operations:
+                    - op: replace
+                      path: /user/claims/1/value
+                      value: Bob@newdomain.com
+                    - op: replace
+                      path: /user/claims/2/value
+                      value: Bob@newdomain.com
+                    - op: add
+                      path: /user/claims/-
+                      value:
+                        uri: http://wso2.org/claims/givenname
+                        value: BobUpdated
+                    - op: remove
+                      path: /user/claims/0
+                    - op: replace
+                      path: /user/roles/0
+                      value: developer
+        "400":
+          description: BadRequest
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorResponseBody'
+                - $ref: '#/components/schemas/ErrorPayload'
+              examples:
+                BadRequest:
+                  value:
+                    actionStatus: ERROR
+                    failureReason: invalid_input
+                    failureDescription: User attributes are invalidated.
+        "500":
+          description: InternalServerError
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+              examples:
+                ServerError:
+                  value:
+                    actionStatus: ERROR
+                    error: server_error
+                    errorDescription: Profile update request is invalid.
+components:
+  schemas:
+    AddOperation:
+      required:
+      - op
+      - paths
+      type: object
+      properties:
+        paths:
+          type: array
+          description: Defines modifiable json paths
+          items:
+            type: string
+            enum:
+            - /user/claims/
+            - /user/roles/
+            - /user/groups/
+      description: "Defines the add operation for claims, roles and groups."
+    AllowedOperations:
+      type: array
+      description: Defines the operation
+      items:
+        oneOf:
+        - $ref: '#/components/schemas/RedirectOperation'
+        - $ref: '#/components/schemas/ReplaceOperation'
+        - $ref: '#/components/schemas/AddOperation'
+        - $ref: '#/components/schemas/RemoveOperation'
+    Claims:
+      required:
+      - uri
+      - value
+      type: object
+      properties:
+        uri:
+          type: string
+          description: Identifier of the user claim being updated
+        value:
+          type: string
+          description: Updating value of the user claim
+      description: Defines the user claims selected by the end user that need to be
+        updated during profile update flow
+    Context:
+      type: array
+      description: Provides the context information for the failures of profile update
+      items:
+        $ref: '#/components/schemas/UpdatingClaimResults'
+    ErrorPayload:
+      required:
+      - message
+      - method
+      - path
+      - reason
+      - status
+      - timestamp
+      type: object
+      properties:
+        timestamp:
+          type: string
+        status:
+          type: integer
+          format: int64
+        reason:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        method:
+          type: string
+    ErrorResponseBody:
+      required:
+      - actionStatus
+      - error
+      - errorDescription
+      type: object
+      properties:
+        error:
+          type: string
+          description: The error code.
+        errorDescription:
+          type: string
+          description: A detailed description of the error.
+      description: Defines a generic error type for both client and server errors
+    Event:
+      required:
+      - action
+      - initiatorType
+      - request
+      - tenant
+      - user
+      - userStore
+      type: object
+      properties:
+        initiatorType:
+          type: string
+          description: Defines the initiatorType for the event
+          enum:
+          - user
+          - admin
+          - application
+        request:
+          $ref: '#/components/schemas/Request'
+        tenant:
+          $ref: '#/components/schemas/Tenant'
+        user:
+          $ref: '#/components/schemas/User'
+        organization:
+          $ref: '#/components/schemas/Organization'
+        userStore:
+          $ref: '#/components/schemas/UserStore'
+      description: Defines the context data related to the event
+    FailureResponse:
+      required:
+      - actionStatus
+      - failureDescription
+      - failureReason
+      type: object
+      properties:
+        failureReason:
+          type: string
+          description: "The status code, as specified in OAuth 2.0 failure response\
+            \ definitions."
+        failureDescription:
+          type: string
+          description: A detailed description of the failure.
+      description: Defines a response type that is under FAILED status without context.
+    Operation:
+      required:
+      - op
+      - path
+      type: object
+      properties:
+        op:
+          type: string
+          description: Defines the operation type
+          enum:
+          - replace
+          - add
+          - remove
+        path:
+          description: Defines modifiable json paths
+          oneOf:
+          - type: string
+          - type: string
+            enum:
+            - /user/claims/
+            - /user/roles/
+            - /user/groups/
+        value:
+          oneOf:
+          - type: string
+          - $ref: '#/components/schemas/UserClaims'
+      description: Context of the operation to be done with profile update
+    Organization:
+      required:
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the organization.
+        name:
+          type: string
+          description: "Name of the organization used to identify the organization\
+            \ in configurations, user interfaces, etc"
+      description: Refers to the organization to which the user belongs.
+    RedirectOperation:
+      required:
+      - op
+      type: object
+      properties: {}
+      description: Defines the redirect operation.
+    RemoveOperation:
+      required:
+      - op
+      - paths
+      type: object
+      properties:
+        paths:
+          type: array
+          description: Defines modifiable json paths
+          items:
+            type: string
+            enum:
+            - /user/claims/
+            - /user/roles/
+            - /user/groups/
+      description: "Defines the remove operation for claims, roles and groups."
+    ReplaceOperation:
+      required:
+      - op
+      - paths
+      type: object
+      properties:
+        paths:
+          type: array
+          description: Defines modifiable json paths
+          items:
+            type: string
+            enum:
+            - /user/claims/value/
+            - /user/roles/
+            - /user/groups/
+      description: "Defines the replace operation for user claims, roles and groups."
+    Request:
+      required:
+      - claims
+      type: object
+      properties:
+        claims:
+          type: array
+          description: Defines the list of updating user attributes.
+          items:
+            $ref: '#/components/schemas/Claims'
+        additionalHeaders:
+          type: array
+          description: Any additional HTTP headers included in the profile update
+            request. These may contain custom information or metadata that the client
+            has sent
+          items:
+            $ref: '#/components/schemas/RequestHeaders'
+        additionalParams:
+          type: array
+          description: Any additional parameters included in the profile update request.
+            These may be custom parameters defined by the client or necessary for
+            specific flows.
+          items:
+            $ref: '#/components/schemas/RequestParams'
+      description: Any additional parameters included in the profile update request.
+        These may be custom parameters defined by the client or necessary for specific
+        flows
+    RequestBody:
+      required:
+      - actionType
+      - allowedOperations
+      - event
+      - flowId
+      - requestId
+      type: object
+      properties:
+        flowId:
+          type: string
+          description: A unique flow correlation identifier that associates with the
+            profile update flow triggered in WSO2 Identity Server.
+        requestId:
+          type: string
+          description: A unique request correlation identifier that associates with
+            the profile update request received by WSO2 Identity Server.
+        event:
+          $ref: '#/components/schemas/Event'
+        allowedOperations:
+          $ref: '#/components/schemas/AllowedOperations'
+      description: Represents the request payload for the profile update flow.
+    RequestHeaders:
+      required:
+      - name
+      - values
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the request header
+        values:
+          type: array
+          description: Values defined for a request header
+          items:
+            type: string
+      description: "Defines the structure of HTTP headers , including the header name\
+        \ and its associated values."
+    RequestParams:
+      required:
+      - name
+      - values
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the request param
+        values:
+          type: array
+          description: Values defined for a request param
+          items:
+            type: string
+      description: "Defines the structure of request parameters, including their name\
+        \ and corresponding list of values"
+    ResponseRedirectOperation:
+      required:
+      - op
+      - url
+      type: object
+      properties:
+        url:
+          type: string
+          description: Redirect url sent by the external service
+      description: Defines the structure of the operation included in the SUCCESS
+        response payload regarding redirect operation
+    SuccessResponseType:
+      description: Defines a response type that can represent various success or failure
+        scenarios.
+      oneOf:
+      - $ref: '#/components/schemas/SuccessResponseWithoutOperations'
+      - $ref: '#/components/schemas/SuccessResponseWithOperations'
+      - $ref: '#/components/schemas/SuccessResponseWithRedirection'
+      - $ref: '#/components/schemas/SuccessResponseWithFailedValidation'
+      - $ref: '#/components/schemas/FailureResponse'
+    SuccessResponseWithFailedValidation:
+      required:
+      - actionStatus
+      - context
+      - failureDescription
+      - failureReason
+      type: object
+      properties:
+        failureReason:
+          type: string
+          description: "The status code, as specified in OAuth 2.0 failure response\
+            \ definitions."
+        failureDescription:
+          type: string
+          description: A detailed description of the failure.
+        context:
+          type: array
+          description: Defines the list of updating user attribute result.
+          items:
+            $ref: '#/components/schemas/Context'
+      description: Defines a response type that is under FAILED status with context.
+    SuccessResponseWithOperations:
+      required:
+      - actionStatus
+      - operations
+      type: object
+      properties:
+        operations:
+          type: array
+          description: Defines the list operations to be done in relation profile
+            update flow
+          items:
+            $ref: '#/components/schemas/Operation'
+      description: Defines a response type that is under SUCCESS status with operations.
+    SuccessResponseWithRedirection:
+      required:
+      - actionStatus
+      - incompleteDescription
+      - incompleteReason
+      - operation
+      type: object
+      properties:
+        incompleteReason:
+          type: string
+          description: Reason for the incomplete
+        incompleteDescription:
+          type: string
+          description: A detailed description of the incomplete.
+        operation:
+          $ref: '#/components/schemas/ResponseRedirectOperation'
+      description: Defines a response type that is under INCOMPLETE status with redirection.
+    SuccessResponseWithoutOperations:
+      required:
+      - actionStatus
+      type: object
+      properties: {}
+      description: Defines a response type that is under SUCCESS status without operations.
+    Tenant:
+      required:
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique numeric identifier of the tenant.
+        name:
+          type: string
+          description: The domain name of the tenant.
+      description: Represents the tenant under which the profile update request is
+        being processed.
+    UpdatingClaimResults:
+      required:
+      - message
+      - status
+      - uri
+      type: object
+      properties:
+        uri:
+          type: string
+          description: Identifier of the user claim being updated
+        status:
+          type: string
+          description: Status of the update
+          enum:
+          - FAILED
+          - SUCCESS
+        message:
+          type: string
+          description: Message of the updating
+      description: Defines the failure or success context for each user claim
+    User:
+      required:
+      - claims
+      - id
+      type: object
+      properties:
+        id:
+          type: string
+          description: Defines the unique identifier of the user
+        claims:
+          type: array
+          description: User claims
+          items:
+            $ref: '#/components/schemas/UserClaims'
+        groups:
+          type: array
+          description: Groups of the user
+          items:
+            type: string
+        roles:
+          type: array
+          description: Roles of the user
+          items:
+            type: string
+      description: "Contains information about the user associated with the profile\
+        \ update request, including updated user claims."
+    UserClaims:
+      required:
+      - uri
+      - value
+      type: object
+      properties:
+        uri:
+          type: string
+          description: Identifier of the user claim
+        value:
+          type: string
+          description: Value of the user claim
+        updatingvalue:
+          type: string
+          description: Updating value of the user claim
+      description: Includes the additional user claims of the user which can be processed
+        by the external service
+    UserStore:
+      required:
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier for the user store.
+        name:
+          type: string
+          description: "User store name used to identify the user store in configuration\
+            \ settings, user interfaces, and administrative tasks"
+      description: Indicates the user store in which the user's data is being managed.
+  # Security Schemas are added manually; not generated automatically.
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            process: process request generate response

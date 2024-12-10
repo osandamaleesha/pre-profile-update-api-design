@@ -1,0 +1,98 @@
+{
+  "flowId": "zaTozbdQps",
+  "requestId": "Ec1wMjmiG8",
+  "actionType": "PRE_UPDATE_PROFILE",
+  "event": {
+    "initiatorType": "user",
+    "action": "update",
+    "request": {
+      "claims": [
+        {
+          "uri": "http://wso2.org/claims/emailaddress",
+          "value": "bob@newdomain.com"
+        }
+      ],
+      "additionalHeaders": [
+        {
+          "name": "Host",
+          "values": [
+            "example.com"
+          ]
+        }
+      ],
+      "additionalParams": [
+        {
+          "name": "device",
+          "values": [
+            "003ef4a768182ba1ece32cb"
+          ]
+        }
+      ]
+    },
+    "tenant": {
+      "id": "2",
+      "name": "bar.com"
+    },
+    "user": {
+      "id": "e204849c-4ec2-41f1-8ff7-ec1ebff02821",
+      "claims": [
+        {
+          "uri": "http://wso2.org/claims/additionalname",
+          "value": "BobN"
+        },
+        {
+          "uri": "http://wso2.org/claims/emailaddress",
+          "value": "bob@aol.com",
+          "updatingvalue": "bob@newdomain.com"
+        },
+        {
+          "uri": "http://wso2.org/claims/verifiedemailaddress",
+          "value": "bob@aol.com"
+        }
+      ],
+      "groups": [
+        "employee"
+      ],
+      "roles": [
+        "useradmin"
+      ]
+    },
+    "organization": {
+      "id": "5c7930f2-c97d-4b38-89a6-7be5fb138a35",
+      "name": "foo.com"
+    },
+    "userStore": {
+      "id": "UFJJTUFSWQ==",
+      "name": "PRIMARY"
+    }
+  },
+  "allowedOperations": [
+    {
+      "op": "redirect"
+    },
+    {
+      "op": "add",
+      "paths": [
+        "/user/claims/",
+        "/user/roles/",
+        "/user/groups/"
+      ]
+    },
+    {
+      "op": "replace",
+      "paths": [
+        "/user/claims/value",
+        "/user/roles/",
+        "/user/groups/"
+      ]
+    },
+    {
+      "op": "remove",
+      "paths": [
+        "/user/claims/",
+        "/user/roles/",
+        "/user/groups/"
+      ]
+    }
+  ]
+}

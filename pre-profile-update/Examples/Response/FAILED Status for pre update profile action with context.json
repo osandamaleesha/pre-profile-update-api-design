@@ -1,0 +1,19 @@
+{
+    "actionStatus": "FAILED",
+    "failureReason": "invalid_input",
+    "failureDescription": "User attributes are invalidated.",
+    "context": {
+      "updatingClaimResult": [
+        {
+          "uri": "http://wso2.org/claims/emailaddress",
+          "status": "FAILED",
+          "message": "Email is not in use"
+        },
+        {
+          "uri": "http://wso2.org/claims/mobilenumber",
+          "status": "SUCCESS",
+          "message": "Valid mobile number"
+        }
+      ]
+    }
+  }
